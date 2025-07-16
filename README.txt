@@ -2,7 +2,9 @@ Process and track Regence Blue Shield Claims.
 
 Goto regence.com   (user blake5634, pwd RE_tr......)
 
-    Click "Claims" , Download CSV
+    Click "Claims" -> "Download CSV"
+
+    (system downloads a .xlsx file(!))
 
     >p3 procnewClaims.py  <download file>
 
