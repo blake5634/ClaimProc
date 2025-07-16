@@ -18,7 +18,7 @@ def main():
     if len(args) ==2:
         odsname = sys.argv[1]
     else:
-        odsname = "Data.ods"
+        odsname = mc.default_ODS_name
 
     print("Input file: ", odsname)
     if not odsname.endswith('.ods'):
@@ -28,7 +28,7 @@ def main():
     sub.run(['cp', odsname, odsname+'BACKUP'])
 
     # Read, sort, writeback out
-    merge = mc.ClaimsDataMerger("Data.ods")
+    merge = mc.ClaimsDataMerger(mc.default_ODS_name)
 
     odsname = merge.ods_filename
 
@@ -37,7 +37,7 @@ def main():
 
     print('document loaded!')
 
-    sortOK = merge.sort_ods_by_date_of_service()
+    sortOK = merge.sort_ods_by_date_of_service(doc)
 
     if sortOK:
         print(' document sorted')

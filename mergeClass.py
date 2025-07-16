@@ -6,13 +6,16 @@ from openpyxl import load_workbook                          # see https://github
 from odf.opendocument import OpenDocumentSpreadsheet, load
 from odf.table import Table, TableRow, TableCell
 from odf.text import P
-from odf.style import Style, TableColumnProperties, TableCellProperties
+from odf.style import Style, TableColumnProperties, TextProperties, TableCellProperties
 from odf.number import NumberStyle, Number
+
+
+default_ODS_name = "EOB_Claims_data.ods"
 
 class ClaimsDataMerger:
     """Handles merging of medical claims data into ODS format."""
 
-    def __init__(self, ods_filename: str = "Data.ods"):
+    def __init__(self, ods_filename: str = "default_ODS_name"):
         self.ods_filename = ods_filename
         self.expected_headers = [
             "Claim number", "Date of Service", "Date Received", "Date processed",
@@ -21,6 +24,14 @@ class ClaimsDataMerger:
             "Applies to my deductible", "Copay", "Coinsurance", "Other Insurance",
             "Medication name", "Prescription number", "NDC number", "Day supply",
             "Quantity", "Pharmacy name", "Pharmacy number"
+        ]
+        self.streamlined_headers = [
+            "Claim number", "D.O.S", "Received", "Processed",
+            "Status", "Provider", "Patient", "Billed",
+            "Your Rate", "We Paid", "You owe",
+            "Deductible", "Copay", "Coins.", "Other Ins.",
+            "Medication", "Prescription", "NDC number", "Day supply",
+            "Quantity", "Pharmacy", "Pharm. number"
         ]
 
     def read_excel_claims(self, excel_filename: str) -> List[Dict[str, Any]]:
@@ -73,9 +84,9 @@ class ClaimsDataMerger:
                     header_row = 1
                     data_start_row = 2
                     print(f"Using row 1 as headers (default): {headers}")
-
-            print(f"DEBUG: Using header row {header_row}, data starts at row {data_start_row}")
-            print(f"DEBUG: Found headers: {headers}")
+            #
+            # print(f"DEBUG: Using header row {header_row}, data starts at row {data_start_row}")
+            # print(f"DEBUG: Found headers: {headers}")
 
             # Read data rows
             claims = []
@@ -83,12 +94,12 @@ class ClaimsDataMerger:
                 if any(cell is not None for cell in row):  # Skip empty rows
                     claim_dict = {}
                     for i, header in enumerate(headers):
-                        if i < len(row):
+                        if i < len(row):   # fill in the claim_dict for this row
                             claim_dict[header] = row[i] if row[i] is not None else ""
                         else:
                             claim_dict[header] = ""
                     Valid = True
-                    for k in claim_dict.keys():
+                    for k in claim_dict.keys():   # drop "Grand Total:" rows
                         if "Grand" in claim_dict[k]:
                             Valid=False
                     if Valid:
@@ -107,68 +118,72 @@ class ClaimsDataMerger:
 
         except Exception as e:
             print(f"First attempt failed: {str(e)}")
-            print("Trying alternative approach without read_only mode...")
 
-            # Try without read_only mode as a fallback
-            try:
-                workbook = load_workbook(excel_filename, data_only=True)
-                sheet = workbook.active
-                print("Successfully opened file without read_only mode")
+            print("    quitting()")
+            quit()
 
-                # Get headers
-                first_row_headers = []
-                for cell in sheet[1]:
-                    if cell.value:
-                        first_row_headers.append(str(cell.value).strip())
-                    else:
-                        first_row_headers.append("")
-
-                second_row_headers = []
-                if sheet.max_row >= 2:
-                    for cell in sheet[2]:
-                        if cell.value:
-                            second_row_headers.append(str(cell.value).strip())
-                        else:
-                            second_row_headers.append("")
-
-                if self._validate_headers(second_row_headers):
-                    headers = second_row_headers
-                    data_start_row = 3
-                elif self._validate_headers(first_row_headers):
-                    headers = first_row_headers
-                    data_start_row = 2
-                else:
-                    if any(h.lower() in ['claim number', 'date of service'] for h in second_row_headers):
-                        headers = second_row_headers
-                        data_start_row = 3
-                    else:
-                        headers = first_row_headers
-                        data_start_row = 2
-
-                print(f"Fallback headers: {headers}")
-
-                claims = []
-                for row_num in range(data_start_row, sheet.max_row + 1):
-                    row_data = []
-                    for col_num in range(1, len(headers) + 1):
-                        cell_value = sheet.cell(row=row_num, column=col_num).value
-                        row_data.append(cell_value if cell_value is not None else "")
-
-                    if any(cell for cell in row_data):
-                        claim_dict = {}
-                        for i, header in enumerate(headers):
-                            if i < len(row_data):
-                                claim_dict[header] = row_data[i]
-                            else:
-                                claim_dict[header] = ""
-                        claims.append(claim_dict)
-
-                workbook.close()
-                print(f"Successfully read {len(claims)} claims using fallback method")
-                return claims
-
-            except Exception as e2:
-                raise Exception(f"Error reading Excel file '{excel_filename}': {str(e)}. Fallback also failed: {str(e2)}")
+            # print("Trying alternative approach without read_only mode...")
+            #
+            # # Try without read_only mode as a fallback
+            # try:
+            #     workbook = load_workbook(excel_filename, data_only=True)
+            #     sheet = workbook.active
+            #     print("Successfully opened file without read_only mode")
+            #
+            #     # Get headers
+            #     first_row_headers = []
+            #     for cell in sheet[1]:
+            #         if cell.value:
+            #             first_row_headers.append(str(cell.value).strip())
+            #         else:
+            #             first_row_headers.append("")
+            #
+            #     second_row_headers = []
+            #     if sheet.max_row >= 2:
+            #         for cell in sheet[2]:
+            #             if cell.value:
+            #                 second_row_headers.append(str(cell.value).strip())
+            #             else:
+            #                 second_row_headers.append("")
+            #
+            #     if self._validate_headers(second_row_headers):
+            #         headers = second_row_headers
+            #         data_start_row = 3
+            #     elif self._validate_headers(first_row_headers):
+            #         headers = first_row_headers
+            #         data_start_row = 2
+            #     else:
+            #         if any(h.lower() in ['claim number', 'date of service'] for h in second_row_headers):
+            #             headers = second_row_headers
+            #             data_start_row = 3
+            #         else:
+            #             headers = first_row_headers
+            #             data_start_row = 2
+            #
+            #     print(f"Fallback headers: {headers}")
+            #
+            #     claims = []
+            #     for row_num in range(data_start_row, sheet.max_row + 1):
+            #         row_data = []
+            #         for col_num in range(1, len(headers) + 1):
+            #             cell_value = sheet.cell(row=row_num, column=col_num).value
+            #             row_data.append(cell_value if cell_value is not None else "")
+            #
+            #         if any(cell for cell in row_data):
+            #             claim_dict = {}
+            #             for i, header in enumerate(headers):
+            #                 if i < len(row_data):
+            #                     claim_dict[header] = row_data[i]
+            #                 else:
+            #                     claim_dict[header] = ""
+            #             claims.append(claim_dict)
+            #
+            #     workbook.close()
+            #     print(f"Successfully read {len(claims)} claims using fallback method")
+            #     return claims
+            #
+            # except Exception as e2:
+            #     raise Exception(f"Error reading Excel file '{excel_filename}': {str(e)}. Fallback also failed: {str(e2)}")
 
     def _validate_headers(self, headers: List[str]) -> bool:
         """Validate that headers match expected format."""
@@ -202,7 +217,7 @@ class ClaimsDataMerger:
 
         # Add header row
         header_row = TableRow()
-        for header in self.expected_headers:
+        for header in self.streamlined_headers:
             cell = TableCell()
             cell.addElement(P(text=header))
             header_row.addElement(cell)
@@ -211,7 +226,7 @@ class ClaimsDataMerger:
         doc.spreadsheet.addElement(table)
         return doc
 
-    def get_existing_claims(self, doc: OpenDocumentSpreadsheet) -> Set[str]:
+    def get_existing_claim_numbers(self, doc: OpenDocumentSpreadsheet) -> Set[str]:
         """Get set of existing claim numbers to avoid duplicates."""
         existing_claims = set()
 
@@ -231,39 +246,43 @@ class ClaimsDataMerger:
         # Find claim number column index
         header_row = rows[0]
         header_cells = header_row.getElementsByType(TableCell)
-        claim_col_index = -1
 
-        for i, cell in enumerate(header_cells):
-            paragraphs = cell.getElementsByType(P)
-            if paragraphs:
-                cell_text = str(paragraphs[0]).strip()
-                if cell_text.lower() == "claim number":
-                    claim_col_index = i
-                    break
+        claim_col_index = 0
 
-        if claim_col_index == -1:
-            print("Warning: Could not find 'Claim number' column in existing data.")
-            return existing_claims
+        # for i, cell in enumerate(header_cells):
+        #     cell_contents = cell.getElementsByType(P)
+        #     if cell_contents:
+        #         cell_text = str(cell_contents[0]).strip()
+        #         if cell_text.lower() == "claim number":
+        #             claim_col_index = i
+        #             break
+        #
+        # if claim_col_index == -1:
+        #     print("Warning: Could not find 'Claim number' column in existing data.")
+        #     return existing_claims
 
         # Extract existing claim numbers
-        for row in rows[1:]:  # Skip header row
+        for row in rows:  # Skip header row
             cells = row.getElementsByType(TableCell)
-            if len(cells) > claim_col_index:
-                paragraphs = cells[claim_col_index].getElementsByType(P)
-                if paragraphs:
-                    claim_num = str(paragraphs[0]).strip()
-                    if claim_num:
-                        existing_claims.add(claim_num)
+            if str(cells[0]).strip() != '' and str(cells[0]).strip().lower() != 'claim number':  # skip blank lines and header
+                if len(cells) > claim_col_index:
+                    cell_contents = cells[claim_col_index].getElementsByType(P)
+                    if cell_contents:
+                        claim_num = str(cell_contents[0])
+                        if claim_num:
+                            existing_claims.add(claim_num)
+            else:
+                print('Im dropping a header row: ', cells)
 
         print(f"Found {len(existing_claims)} existing claims.")
         return existing_claims
 
     def add_claims_to_ods(self, doc: OpenDocumentSpreadsheet, new_claims: List[Dict[str, Any]]) -> int:
         """Add new claims to ODS document, avoiding duplicates."""
-        existing_claims = self.get_existing_claims(doc)
-        print(f"Found {len(existing_claims)} existing claims in ODS file.")
+        existing_claim_nums = self.get_existing_claim_numbers(doc)
+        print(f"Found {len(existing_claim_nums)} existing claims in ODS file.")
 
-        # Get the first table
+        # Get the original ods table
         tables = doc.spreadsheet.getElementsByType(Table)
         if not tables:
             print("Error: No table found in ODS document.")
@@ -277,7 +296,7 @@ class ClaimsDataMerger:
             print(f"Processing claim {i+1}/{len(new_claims)}: {claim_number}")
 
             # Skip if claim already exists
-            if claim_number in existing_claims:
+            if claim_number in existing_claim_nums:
                 print(f"  Skipping duplicate claim: {claim_number}")
                 continue
 
@@ -286,30 +305,39 @@ class ClaimsDataMerger:
 
             for header in self.expected_headers:
                 cell = TableCell()
-                value = claim.get(header, "")
+                value = claim.get(header, "")  # get cell data from dict indexed by header
                 if value is None:
                     value = ""
 
                 # Convert value to string and handle special cases
                 str_value = str(value).strip()
-
+                tst_value = str_value
                 # Add value type attribute for better compatibility
-                if str_value.replace('.', '').replace('-', '').isdigit():
+                for c in '.,-$':
+                    tst_value = tst_value.replace(c,'')
+                if tst_value.isdigit():
+                    print('isdigit! ',tst_value)
                     # Numeric value
-                    cell.setAttribute('valuetype', 'float')
+
                     try:
-                        cell.setAttribute('value', str(float(str_value)))
+                        # <table:table-cell office:value-type="currency" office:currency="USD" office:value="100.12" calcext:value-type="currency"><text:p>$100.12</text:p></table:table-cell>
+                        # cell.setAttribute('office:value-type', 'currency')
+                        # cell.setAttribute('office:currency', 'USD')
+                        # cell.setAttribute('calcext:value-type','currency')
+                        cell.setAttribute('value',P(text=str_value))
                     except ValueError:
+                        print("Unknown error line 324")
                         cell.setAttribute('valuetype', 'string')
                 else:
                     # String value
+                    print('string! ',tst_value)
                     cell.setAttribute('valuetype', 'string')
 
                 cell.addElement(P(text=str_value))
                 new_row.addElement(cell)
 
             table.addElement(new_row)
-            existing_claims.add(claim_number)
+            existing_claim_nums.add(claim_number)
             added_count += 1
             print(f"  Added claim: {claim_number}")
 
@@ -329,14 +357,40 @@ class ClaimsDataMerger:
         except Exception as e:
             raise Exception(f"Error saving ODS file: {str(e)}")
 
+    # def clean_ods(self, doc: OpenDocumentSpreadsheet):
+    #
+    #     print("Cleaning up entries")
+    #     tables = doc.spreadsheet.getElementsByType(Table)  #(I think "tables" are "Tabs")
+    #
+    #     if not tables:
+    #         print("Error: No tables found in ODS document.")
+    #         return False
+    #
+    #     patientNameCol = 6  # we are going to shorten patient name
+    #     table = tables[0]
+    #     rows = table.getElementsByType(TableRow)
+    #     for row_idx, row in enumerate(rows):  # Skip header
+    #             cells = row.getElementsByType(TableCell)
+    #             # eliminate blank lines and header
+    #             if str(cells[0]).strip() != '' and str(cells[0]).strip().lower() != 'claim number':
+    #                 nametxt = str(cells[patientNameCol]  )
+    #                 nametxt = nametxt.replace('Ruggeiro','').replace('Hannaford','') # delete last names
+    #                 cells[patientNameCol].value=None  # TODO:  This doesn't work and nobody knows how to replace (not add to) text!!!!!
+    #                 cells[patientNameCol].addElement(P(text=nametxt) )
+    #     return doc
+
+
+
+
+
 #  NEW  sort ods rows by date of service
     def sort_ods_by_date_of_service(self, doc: OpenDocumentSpreadsheet) -> bool:
         """Sort the ODS document by Date of Service column (mm/dd/yyyy format), most recent first."""
-        try:
+        if True:  #try
             from datetime import datetime
 
             print("Sorting document by Date of Service...")
-            tables = doc.spreadsheet.getElementsByType(Table)
+            tables = doc.spreadsheet.getElementsByType(Table)  #(I think "tables" are "Tabs")
 
             if not tables:
                 print("Error: No tables found in ODS document.")
@@ -350,65 +404,93 @@ class ClaimsDataMerger:
                 return True
 
             # Find the Date of Service column index
-            header_row = rows[0]
-            header_cells = header_row.getElementsByType(TableCell)
-            date_col_index = -1
-
-            for i, cell in enumerate(header_cells):
-                paragraphs = cell.getElementsByType(P)
-                if paragraphs:
-                    cell_text = str(paragraphs[0]).strip()
-                    if cell_text.lower() == "date of service":
-                        date_col_index = i
-                        break
-
-            if date_col_index == -1:
-                print("Error: Could not find 'Date of Service' column.")
-                return False
-
-            print(f"Found 'Date of Service' column at index {date_col_index}")
+            date_col_index = 1
+            # header_row = rows[0]
+            # header_cells = header_row.getElementsByType(TableCell)
+            # date_col_index = -1
+            #
+            # for i, cell in enumerate(header_cells):
+            #     cell_contents = cell.getElementsByType(P)
+            #     if cell_contents:
+            #         cell_text = str(cell_contents[0]).strip()
+            #         if cell_text.lower() == "date of service":
+            #             date_col_index = i
+            #             break
+            #
+            # if date_col_index == -1:
+            #     print("Error: Could not find 'Date of Service' column.")
+            #     return False
+            #
+            # print(f"Found 'Date of Service' column at index {date_col_index}")
 
             # Extract data rows with their date values for sorting
             data_rows = []
-            for row_idx, row in enumerate(rows[1:], 1):  # Skip header
+            for row_idx, row in enumerate(rows):  # Skip header
                 cells = row.getElementsByType(TableCell)
 
-                # Extract all cell values for this row
-                row_data = []
-                for cell in cells:
-                    paragraphs = cell.getElementsByType(P)
-                    if paragraphs:
-                        row_data.append(str(paragraphs[0]).strip())
-                    else:
-                        row_data.append("")
+                # eliminate blank lines and header
+                if str(cells[0]).strip() != '' and str(cells[0]).strip().lower() != 'claim number':
 
-                # Skip completely blank rows
-                if not any(cell.strip() for cell in row_data):
-                    continue
+                    # Extract all cell values for this row
+                    row_data = []
+                    for cell in cells:
+                        cell_contents = cell.getElementsByType(P)
+                        if cell_contents:
+                            row_data.append(str(cell_contents[0]) )
+                        else:
+                            row_data.append("")
 
-                # Parse the date from the Date of Service column
-                date_str = row_data[date_col_index] if date_col_index < len(row_data) else ""
+                    # Skip completely blank rows
+                    if not any(cell.strip() for cell in row_data):
+                        continue
 
-                try:
-                    # Parse mm/dd/yyyy format (American format)
-                    parsed_date = datetime.strptime(date_str.strip(), "%m/%d/%Y")
-                except ValueError as e:
-                    # If parsing fails, use a default old date to put it at the end
-                    parsed_date = datetime(1900, 1, 1)
-                    print(f"Warning: Could not parse date '{date_str}' in row {row_idx} - Error: {e}")
+                    # Parse the date from the Date of Service column
+                    date_str = row_data[date_col_index] if date_col_index < len(row_data) else ""
 
-                # Store the actual row object with its date for sorting
-                data_rows.append((parsed_date, row))
+                    try:
+                        # Parse mm/dd/yyyy format (American format)
+                        parsed_date = datetime.strptime(date_str.strip(), "%m/%d/%Y")
+                    except ValueError as e:
+                        # If parsing fails, use a default old date to put it at the end
+                        parsed_date = datetime(1900, 1, 1)
+                        print(f"Warning: Could not parse date '{date_str}' in row {row_idx} - Error: {e}")
+
+                    # Store the actual row object with its date for sorting
+                    data_rows.append((parsed_date, row))
 
             # Sort by date (reverse=True for most recent first)
             data_rows.sort(key=lambda x: x[0], reverse=True)
             print(f"Sorted {len(data_rows)} data rows by Date of Service (most recent first)")
 
-            # Remove all data rows from table (keep header)
-            data_rows_to_remove = rows[1:]  # All except header
+            # Remove all  rows from the table
+            data_rows_to_remove = rows[:]  # All
             for row in data_rows_to_remove:
                 table.removeChild(row)
 
+            # # set up boldface for header
+            # EOBboldstyle = Style(name="EOBBoldStyle", family="table-cell")
+            # EOBboldstyle.addElement(TextProperties(attributes={"fo:font-weight": "bold"}))
+            # doc.styles.addElement(EOBboldstyle)  # put the style into the doc
+
+
+            ####
+            # Add blank lines and header
+            row1 = TableRow()
+            row2 = TableRow()
+            c1 = TableCell(valuetype='string')
+            c1.addElement(P(text=''))  # a blank text cell
+
+            for i in range(len(self.streamlined_headers)):
+                row1.addElement(c1) # blank string cell
+                c2 = TableCell()
+                c2.setAttribute('valuetype', 'string')
+                c2.addElement(P(text=self.streamlined_headers[i]) )
+                row2.addElement(c2) # header row
+
+            table.addElement(row1) # blank line
+            table.addElement(row2) # streamlined_headers
+
+            ####
             # Add sorted rows back to table (preserving original formatting)
             for parsed_date, row in data_rows:
                 table.addElement(row)
@@ -416,9 +498,11 @@ class ClaimsDataMerger:
             print("Successfully sorted document in memory")
             return True
 
-        except Exception as e:
-            print(f"Error sorting ODS document: {str(e)}")
-            return False
+        # except Exception as e:
+        #     print(f"Error sorting ODS document: {str(e)}")
+        #     print(' ... quitting now')
+        #     quit()
+        #     return False
 
     def verify_ods_content(self):
         """Verify the content of the saved ODS file."""
@@ -440,9 +524,9 @@ class ClaimsDataMerger:
                 cells = row.getElementsByType(TableCell)
                 row_data = []
                 for cell in cells:
-                    paragraphs = cell.getElementsByType(P)
-                    if paragraphs:
-                        row_data.append(str(paragraphs[0]).strip())
+                    cell_contents = cell.getElementsByType(P)
+                    if cell_contents:
+                        row_data.append(str(cell_contents[0]).strip())
                     else:
                         row_data.append("")
                 print(f"Row {i+1}: {row_data[:3]}...")  # Show first 3 columns
@@ -469,8 +553,10 @@ class ClaimsDataMerger:
 
         print("Merging claims data...")
         added_count = self.add_claims_to_ods(doc, claims)
+        print("Sorting...")
         self.sort_ods_by_date_of_service(doc)
         if added_count > 0:
+            # self.save_ods(self.clean_ods(doc))
             self.save_ods(doc)
             print(f"Added {added_count} new claims to {self.ods_filename}")
         else:
