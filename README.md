@@ -1,6 +1,6 @@
 Process and track Regence Blue Shield Claims.
 
-## New workflow:##
+## New workflow:
 
     1. Goto regence.com   (user blake5634, pwd RE_tr......)
 
@@ -16,7 +16,8 @@ Process and track Regence Blue Shield Claims.
     >p3 reformatAsHealthBills.py  EOB_Claims_data.ods
 
 
-    >lo NewSheetforHealthBills.ods ```
+    >lo NewSheetforHealthBills.ods
+```
 
     4. Paste each patient's rows into
          appropriate tab of HealthBills20xx.ods
