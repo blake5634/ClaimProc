@@ -16,8 +16,8 @@ Process and track Regence Blue Shield Claims.
     >p3 reformatAsHealthBills.py  EOB_Claims_data.ods
 
 
-    >lo NewSheetforHealthBills.ods
-         * sort by patient and date
-         * paste into HealthBills20xx.ods ```
+    >lo NewSheetforHealthBills.ods ```
 
-```
+    4. Paste each patient's rows into
+         appropriate tab of HealthBills20xx.ods
+
