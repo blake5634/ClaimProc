@@ -45,16 +45,20 @@ def main():
     outheaders = ['DOS', 'Bill Date', 'Provider', 'Description', 'Organiz.',
                   'EOB Resp.', 'Bill Amt.', 'Paymt', 'E/P', 'Pymt Date',
                   'Deductable', 'Balance', 'Claim #', 'CoPay', 'Coinsur.']
-    outputrows = [ outheaders.copy() ]
 
+    known_patients = ['Blake','Cynthia']
+    pdict = {}
+    for p in known_patients:
+        pdict[p] = []
     for r in claims[2:]:
         cnum = r[0]
         DOS  = r[1]
         stat = r[4]
         prov = r[5]
         patient = r[6]
-        patient.replace('Ruggeiro','')
-        patient.replace('Hannaford','')
+        p1 = patient.replace('Ruggeiro','')
+        p2 = p1.replace('Hannaford','')
+        patient = p2.strip()
         amt = r[7]      # '$123.45'
         presp = r[8]
         ded = r[9]
@@ -80,8 +84,7 @@ def main():
         newrow.append(cnum)
         newrow.append(copay) # co-pay
         newrow.append(coins) #co-insurance
-
-        outputrows.append(newrow)
+        pdict[patient].append(newrow)  # separate claims by patient
 
 
     outfile = 'NewSheetforHealthBills.csv'
@@ -91,7 +94,11 @@ def main():
         error(f'Couldnt open {outfile} for output')
 
     writer = csv.writer(ofp,delimiter=',',quotechar='"',quoting=csv.QUOTE_MINIMAL)
-    writer.writerows(outputrows)
+    writer.writerow(outheaders)
+    for p in known_patients:
+        namerow = [p]
+        writer.writerow(namerow)
+        writer.writerows(pdict[p])
     ofp.close()
     print(f'\n\n Job completed. Open new data in {outfile}\n')
 

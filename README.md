@@ -1,6 +1,6 @@
 Process and track Regence Blue Shield Claims.
 
-   ** New workflow**:
+## New workflow:##
 
     1. Goto regence.com   (user blake5634, pwd RE_tr......)
 
@@ -18,6 +18,6 @@ Process and track Regence Blue Shield Claims.
 
     >lo NewSheetforHealthBills.ods
          * sort by patient and date
-         * paste into HealthBills20xx.ods
+         * paste into HealthBills20xx.ods ```
 
 ```
