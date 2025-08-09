@@ -11,10 +11,7 @@ Process and track Regence Blue Shield Claims.
 
     3. Using command line:
 
-``` >p3 procClaims.py  <download file>
-
-    >p3 reformatAsHealthBills.py  EOB_Claims_data.ods
-
+``` >p3 procClaims.py  <download .xlsx file>
 
     >lo NewSheetforHealthBills.ods
 ```
