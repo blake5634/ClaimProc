@@ -2,12 +2,37 @@ import os
 import sys
 import csv
 import xlsx2csv as x2c
+from datetime import datetime
 
 def error(msg):
     print('Error:',msg)
     print('Usage: ')
     print(' > proClaims  file.xls')
     quit()
+
+# thanks Claude!
+def format_date(date_str):
+    """Convert date string to a standardized format"""
+    # Assuming input might be in various formats
+    try:
+        # Parse the date (adjust format as needed)
+        date_obj = datetime.strptime(date_str, '%m/%d/%Y')
+        # Return in ISO format which most spreadsheets recognize
+        return date_obj.strftime('%Y-%m-%d')
+    except ValueError:
+        return date_str  # Return original if parsing fails
+
+def format_currency(amount_str):
+    """Format currency amounts consistently"""
+    try:
+        # Remove any existing currency symbols and convert to float
+        clean_amount = amount_str.replace('$', '').replace(',', '')
+        amount = float(clean_amount)
+        # Return formatted with 2 decimal places
+        return f"{amount:.2f}"
+    except (ValueError, AttributeError):
+        return amount_str
+# end of claude
 
 def main():
     if len(sys.argv) != 2:
@@ -52,18 +77,18 @@ def main():
         pdict[p] = []
     for r in claims[2:]:
         cnum = r[0]
-        DOS  = r[1]
+        DOS  = format_date(r[1])
         stat = r[4]
         prov = r[5]
         patient = r[6]
         p1 = patient.replace('Ruggeiro','')
         p2 = p1.replace('Hannaford','')
         patient = p2.strip()
-        amt = r[7]     # '$123.45'
+        amt = format_currency( r[7] )    # '$123.45'
         presp = r[10]
-        ded = r[11]
-        copay = r[12]
-        coins = r[13]
+        ded = format_currency(r[11])
+        copay = format_currency(r[12])
+        coins = format_currency(r[13])
 
         if stat.startswith('Pending'):  # only get completed claims
             continue
