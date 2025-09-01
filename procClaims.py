@@ -59,31 +59,31 @@ def main():
         p1 = patient.replace('Ruggeiro','')
         p2 = p1.replace('Hannaford','')
         patient = p2.strip()
-        amt = r[7]      # '$123.45'
-        presp = r[8]
-        ded = r[9]
-        copay = r[10]
-        coins = r[11]
+        amt = r[7]     # '$123.45'
+        presp = r[10]
+        ded = r[11]
+        copay = r[12]
+        coins = r[13]
 
         if stat.startswith('Pending'):  # only get completed claims
             continue
 
         newrow = []
-        newrow.append(DOS)
+        newrow.append(DOS) #col A
         newrow.append('')    # no bill date for claims
-        newrow.append(prov)
+        newrow.append(prov) # col C
         newrow.append('')    # no descrip for claims(!>W*#@() *)
         newrow.append('')    # no org for claims
-        newrow.append(presp)
+        newrow.append(presp) # col F
         newrow.append('')    # no bill amt for claims
         newrow.append('')    # no payment info for claims
         newrow.append('')    # no payment info for claims
         newrow.append('')    # no payment info for claims
-        newrow.append(ded)
+        newrow.append(ded) #Col K
         newrow.append('')    # deductable balance
-        newrow.append(cnum)
-        newrow.append(copay) # co-pay
-        newrow.append(coins) #co-insurance
+        newrow.append(cnum) #Col M
+        newrow.append(copay) # co-pay Col N
+        newrow.append(coins) #co-insurance Col O
         pdict[patient].append(newrow)  # separate claims by patient
 
 
