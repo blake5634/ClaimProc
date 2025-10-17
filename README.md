@@ -6,16 +6,17 @@ Process and track Regence Blue Shield Claims.
 
     2. Click "Claims" -> "Download CSV"
 
-    (system downloads a .xlsx file(!))
+        Set filter options if desired
 
+    (system downloads a .xlsx file(!))
 
     3. Using command line:
 
-``` >p3 procClaims.py  <download .xlsx file>
+``` >p3 procClaims.py  <downloaded .xlsx file>
 
     >lo NewSheetforHealthBills.ods
 ```
 
-    4. Paste each patient's rows into
+    4. Paste each patient's NEW rows into
          appropriate tab of HealthBills20xx.ods
 
