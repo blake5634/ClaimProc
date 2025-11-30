@@ -15,7 +15,7 @@ Process and track Regence Blue Shield Claims.
 ```
     >p3 procClaims.py  <downloaded .xlsx file>
 
-    >lo NewSheetforHealthBills.ods
+    >lo NewSheetforHealthBills.csv
 ```
 
     4. Paste each patient's NEW rows into
